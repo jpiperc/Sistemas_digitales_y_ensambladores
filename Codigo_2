@@ -1,0 +1,84 @@
+const int Trigger = 7;   //define el pin de trigger ultrasonido
+const int Echo = 6;   //define el pin de echo ultrasonido
+const int ledPIN = 13;  //pin del led
+const int LedGreen = 12; // led verde
+int estado = 0; //Estado señales bluetooth
+#include <Servo.h> // Librería servomotor
+  
+
+
+Servo servoMotor; // La variable para controlar el servomotor
+
+void setup() {
+  Serial.begin(9600);  //inicializamos la comunicación
+  pinMode(Trigger, OUTPUT); //se define trigger como salida
+  pinMode(ledPIN, OUTPUT); //se define pin led como salida
+  pinMode(LedGreen, OUTPUT);
+  pinMode(Echo, INPUT);  //se define pin echo como entrada
+  digitalWrite(Trigger, LOW); // Inicializa el pin trigger 
+  digitalWrite(ledPIN , LOW); // poner el Pin en 0
+  digitalWrite(LedGreen , LOW);
+  servoMotor.attach(8); // declarar pin del servomotor en pin 8
+  servoMotor.write(0); // Poner en angulo 0º en el servomotor
+}
+
+
+void loop(){
+  iniciarTrigger();
+  calcularDistancia();
+ bluetooth();
+
+}
+
+void iniciarTrigger(){
+  
+  digitalWrite(Trigger, LOW); // Ponemos el Trigger en estado bajo y esperamos 2 ms
+  delayMicroseconds(2);
+ 
+  
+  digitalWrite(Trigger, HIGH); // Ponemos el pin Trigger a estado alto y esperamos 10 ms
+  delayMicroseconds(10);
+ 
+  
+  digitalWrite(Trigger, LOW); // Comenzamos poniendo el pin Trigger en estado bajo
+}
+
+float calcularDistancia(){ //Metodo para medir la distancia
+ 
+  unsigned long tiempo = pulseIn(Echo, HIGH);  // PulseIn obtiene el tiempo que tarda en cambiar entre estados en este caso de LOW a HIGH
+
+  // Obtenemos la distancia en cm, hay que convertir el tiempo en segudos ya que está en microsegundos, por eso se multiplica por 0.000001
+  float distancia = tiempo * 0.000001 * 34300 / 2.0;
+    if (distancia < 15) {
+digitalWrite(ledPIN , HIGH);   // prende el pin
+digitalWrite(LedGreen , LOW);
+
+  Serial.print(distancia);
+  Serial.print("cm");
+  Serial.println();
+  } 
+   else {
+  digitalWrite(ledPIN , LOW);  // Si esta mas de 15cm el objeto, no prende el pin
+  digitalWrite(LedGreen , HIGH);
+ 
+  
+  }
+  delay(500); //Delay de medio segundo
+}
+void bluetooth (){
+if( Serial.available()>0)
+  {
+    estado = Serial.read();
+  }
+  switch( estado)
+  {
+    case 'a':
+  
+    servoMotor.write(90);   // Desplazamos a la posición 90º
+    break;
+    case 'b':
+ 
+      servoMotor.write(0);   // Desplazamos a la posición 90º
+    break;
+}
+}
